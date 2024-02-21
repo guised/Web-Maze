@@ -3,6 +3,7 @@
  */
 
 import { Maze, MazeSquare, SideType } from "./mazeModel.js";
+import { MazeDrawer } from "./mazeDraw.js";
 
 const getMazeCanvas = () => {
   const canvas = document.getElementById("mazeCanvas");
@@ -14,11 +15,31 @@ const getMazeContext = () => {
   return ctx;
 };
 
+const getSquareSize = () => {
+  const squareSizeInput = document.getElementById("squareSize");
+
+  const dfltValue = parseInt(squareSizeInput.getAttribute("value"));
+  const minValue = parseInt(squareSizeInput.getAttribute("min"));
+  const maxValue = parseInt(squareSizeInput.getAttribute("max"));
+
+  let squareSize = parseInt(squareSizeInput.value);
+
+  if (isNaN(squareSize) || squareSize < minValue || squareSize > maxValue) {
+    alert(
+      `Incorrect square size value.\nShould be a px value between ${minValue} and ${maxValue}\nResetting back to ${dfltValue}`
+    );
+    squareSizeInput.value = dfltValue;
+    squareSize = dfltValue;
+  }
+
+  return squareSize;
+};
+
 function generateMaze() {
   clearMaze();
-  console.log("Generating maze");
+  console.log(`Generating maze, with square size of ${getSquareSize()}`);
 
-  let wallSize = 5; //getSquareSize();
+  const wallSize = getSquareSize();
 
   let width = getMazeCanvas().width;
   let height = getMazeCanvas().height;
@@ -31,126 +52,15 @@ function generateMaze() {
   );
 
   const maze = new Maze(mazeWidth, mazeHeight);
-
-  //console.log(maze);
-
   const ctx = getMazeContext();
+  const drawer = new MazeDrawer(ctx, wallSize, maze);
 
-  let wallBrushWidth = 2;
-  let wallColour = "#000000";
-  let pathColour = "#FF0000";
+  maze.registerDrawer(drawer);
+  maze.build();
 
-  ctx.strokeStyle = wallColour;
-  ctx.lineWidth = wallBrushWidth;
+  //drawer.drawMaze();
 
-  let yOffset = 6;
-
-  for (let y = 0; y < maze.getHeight(); y++) {
-    let xOffset = 5;
-    for (let x = 0; x < maze.getWidth(); x++) {
-      let sqr = maze.getSquare(x, y);
-
-      // Top
-      if (sqr.getTop() === SideType.Wall) {
-        ctx.beginPath();
-        ctx.moveTo(xOffset, yOffset);
-        ctx.lineTo(xOffset + wallSize, yOffset);
-        ctx.stroke();
-      }
-      // Right
-      if (sqr.getRight() === SideType.Wall) {
-        ctx.beginPath();
-        ctx.moveTo(xOffset + wallSize, yOffset);
-        ctx.lineTo(xOffset + wallSize, yOffset + wallSize);
-        ctx.stroke();
-      }
-      // Bottom
-      if (sqr.getBottom() === SideType.Wall) {
-        ctx.beginPath();
-        ctx.moveTo(xOffset, yOffset + wallSize);
-        ctx.lineTo(xOffset + wallSize, yOffset + wallSize);
-        ctx.stroke();
-      }
-      // Left
-      if (sqr.getLeft() === SideType.Wall) {
-        ctx.beginPath();
-        ctx.moveTo(xOffset, yOffset);
-        ctx.lineTo(xOffset, yOffset + wallSize);
-        ctx.stroke();
-      }
-
-      if (sqr.isOnPath()) {
-        ctx.strokeStyle = pathColour;
-
-        let pathBrushWidth = Math.max(1, wallSize - 2 * wallBrushWidth);
-
-        ctx.lineWidth = pathBrushWidth;
-
-        // Top
-        if (sqr.getTop() === SideType.DoorIn) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize / 2, yOffset);
-          ctx.lineTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.stroke();
-        }
-        // Right
-        if (sqr.getRight() === SideType.DoorIn) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize, yOffset + wallSize / 2);
-          ctx.lineTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.stroke();
-        }
-        // Bottom
-        if (sqr.getBottom() === SideType.DoorIn) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize / 2, yOffset + wallSize);
-          ctx.lineTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.stroke();
-        }
-        // Left
-        if (sqr.getLeft() === SideType.DoorIn) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset, yOffset + wallSize / 2);
-          ctx.lineTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.stroke();
-        }
-        // Top
-        if (sqr.getTop() === SideType.DoorOut) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.lineTo(xOffset + wallSize / 2, yOffset);
-          ctx.stroke();
-        }
-        // Right
-        if (sqr.getRight() === SideType.DoorOut) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.lineTo(xOffset + wallSize, yOffset + wallSize / 2);
-          ctx.stroke();
-        }
-        // Bottom
-        if (sqr.getBottom() === SideType.DoorOut) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.lineTo(xOffset + wallSize / 2, yOffset + wallSize);
-          ctx.stroke();
-        }
-        // Left
-        if (sqr.getLeft() === SideType.DoorOut) {
-          ctx.beginPath();
-          ctx.moveTo(xOffset + wallSize / 2, yOffset + wallSize / 2);
-          ctx.lineTo(xOffset, yOffset + wallSize / 2);
-          ctx.stroke();
-        }
-
-        ctx.strokeStyle = wallColour;
-        ctx.lineWidth = wallBrushWidth;
-      }
-
-      xOffset = xOffset + wallSize;
-    }
-    yOffset = yOffset + wallSize;
-  }
+  return;
 }
 
 const clearMaze = () => {
@@ -165,8 +75,6 @@ const clearMaze = () => {
 
 const canvasDivObserver = new ResizeObserver((entries) => {
   const canvas = document.getElementById("mazeCanvas");
-
-  // canvas.style.position = "absolute";
 
   console.log(
     `window.innerWidth = ${window.innerWidth}, window.innerHeight = ${window.innerHeight}`
@@ -194,6 +102,6 @@ const initApp = () => {
 
   const canvasDiv = document.querySelector(".canvasDiv");
 
-  // start listening to changes
+  // start listening to web page size changes
   canvasDivObserver.observe(canvasDiv);
 };

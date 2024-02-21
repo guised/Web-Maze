@@ -11,7 +11,21 @@
   <body>
     <main>
       <h1>Web Maze</h1>
-      <div class="buttonsDiv">
+      <div class="controlsDiv">
+        <div class="squareSizeDiv">
+          <label for="squareSize"
+            >Square size (px value between 5 and 50):</label
+          >
+          <input
+            type="number"
+            id="squareSize"
+            name="squareSize"
+            value="10"
+            min="5"
+            max="50"
+            step="1"
+          />
+        </div>
         <div class="genMazeButtonDiv">
           <input id="genMazeBut" type="button" value="Generate New Maze" />
         </div>

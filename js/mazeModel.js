@@ -100,6 +100,10 @@ export class MazeSquare {
     this.onPath = bool;
   }
 
+  getSide(side) {
+    return this.sides.get(side);
+  }
+
   setSide(side, type) {
     this.sides.set(side, type);
   }
@@ -126,13 +130,22 @@ export class Maze {
   endSquare = new MazeSquare();
   currentSquare = new MazeSquare();
 
+  drawer;
+
   constructor(width, height) {
     this.width = width;
     this.height = height;
+  }
+
+  build = function () {
     this.mazeGrid = this.initialiseSquares();
     this.setStartAndExit();
     this.createMaze();
-  }
+  };
+
+  registerDrawer = function (drawer) {
+    this.drawer = drawer;
+  };
 
   getWidth() {
     return this.width;
@@ -160,6 +173,7 @@ export class Maze {
 
   setCurrentSquare(sqr) {
     this.currentSquare = sqr;
+    this.drawer.drawSquare(sqr);
   }
 
   // Two dimensional array to store MazeSquares
@@ -263,7 +277,8 @@ export class Maze {
 
       if (doorSide === null) {
         this.getCurrentSquare().setOnPath(false);
-        //moveList.remove(sqnum);
+        this.drawer.drawSquare(this.getCurrentSquare());
+
         moveList.pop();
         sqnum--;
       } else {
