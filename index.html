@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Web Maze</title>
-    <link rel="stylesheet" href="css/main.css" />
+    <link rel="icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="css/main.css" type="text/css" />
     <script type="module" src="js/main.js" defer></script>
   </head>
 
@@ -26,8 +27,24 @@
             step="1"
           />
         </div>
+        <div class="slideDiv">
+          <label for="mazeSpeed">Speed :</label>
+          <input
+            name="mazeSpeed"
+            type="range"
+            min="0"
+            max="30"
+            id="mazeSpeed"
+            value="20"
+            step="0.5"
+            class="slider"
+          />
+        </div>
         <div class="genMazeButtonDiv">
           <input id="genMazeBut" type="button" value="Generate New Maze" />
+        </div>
+        <div class="solveMazeButtonDiv">
+          <input id="solveMazeBut" type="button" value="Solve" />
         </div>
         <div class="clearMazeButtonDiv">
           <input id="clearMazeBut" type="button" value="Clear" />

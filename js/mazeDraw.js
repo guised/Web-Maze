@@ -3,22 +3,16 @@ import { SideType, MazeSquare } from "./mazeModel.js";
 export class MazeDrawer {
   ctx;
   wallSize = 10;
-  maze;
 
   offset = 5;
   wallBrushWidth = 2;
   wallColour = "#000000";
   pathColour = "#FF0000";
 
-  constructor(ctx, wallSize, maze) {
+  constructor(ctx, wallSize) {
     this.ctx = ctx;
     this.wallSize = wallSize;
-    this.maze = maze;
   }
-
-  drawSquareXY = function (x, y) {
-    drawSquare(this.maze.getSquare(x, y));
-  };
 
   drawSquare = function (sqr) {
     let yOffset = this.offset + sqr.y * this.wallSize;
@@ -199,10 +193,10 @@ export class MazeDrawer {
     }
   };
 
-  drawMaze = function () {
-    for (let y = 0; y < this.maze.getHeight(); y++) {
-      for (let x = 0; x < this.maze.getWidth(); x++) {
-        let sqr = this.maze.getSquare(x, y);
+  draw = function (maze) {
+    for (let y = 0; y < maze.getHeight(); y++) {
+      for (let x = 0; x < maze.getWidth(); x++) {
+        let sqr = maze.getSquare(x, y);
         this.drawSquare(sqr);
       }
     }

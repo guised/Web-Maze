@@ -130,21 +130,21 @@ export class Maze {
   endSquare = new MazeSquare();
   currentSquare = new MazeSquare();
 
-  drawer;
+  // Following two items used during generation and solving
+  sqnum = 0;
+  moveList = [];
 
   constructor(width, height) {
     this.width = width;
     this.height = height;
   }
 
-  build = function () {
+  initialiseMaze = function () {
     this.mazeGrid = this.initialiseSquares();
     this.setStartAndExit();
-    this.createMaze();
-  };
-
-  registerDrawer = function (drawer) {
-    this.drawer = drawer;
+    this.sqnum = 0;
+    this.moveList = [];
+    //this.createMaze();
   };
 
   getWidth() {
@@ -173,7 +173,10 @@ export class Maze {
 
   setCurrentSquare(sqr) {
     this.currentSquare = sqr;
-    this.drawer.drawSquare(sqr);
+  }
+
+  getSqnum() {
+    return this.sqnum;
   }
 
   // Two dimensional array to store MazeSquares
@@ -260,27 +263,21 @@ export class Maze {
     this.endSquare.sides.set(endSide, SideType.DoorOut);
   };
 
-  /**
-   * Create a maze layout given the initialised maze
-   */
-  createMaze = function () {
-    //let moveList = [this.getWidth() * this.getHeight()];
-    let moveList = [];
-    moveList.push(this.getStartSquare());
+  stepCreateMaze = function () {
+    if (this.moveList.length === 0) {
+      this.moveList.push(this.getStartSquare());
+    }
 
-    let sqnum = 0;
-
-    while (sqnum >= 0) {
-      this.setCurrentSquare(moveList[sqnum]);
+    if (this.sqnum >= 0) {
+      this.setCurrentSquare(this.moveList[this.sqnum]);
       this.getCurrentSquare().setOnPath(true);
       let doorSide = this.chooseDoor(this.getCurrentSquare());
 
       if (doorSide === null) {
         this.getCurrentSquare().setOnPath(false);
-        this.drawer.drawSquare(this.getCurrentSquare());
 
-        moveList.pop();
-        sqnum--;
+        this.moveList.pop();
+        this.sqnum--;
       } else {
         // mark the out door
         this.getCurrentSquare().setSide(doorSide, SideType.DoorOut);
@@ -326,8 +323,79 @@ export class Maze {
           Side.getOpposite(doorSide),
           SideType.DoorIn
         );
-        moveList.push(this.getCurrentSquare());
-        sqnum++;
+        this.moveList.push(this.getCurrentSquare());
+        this.sqnum++;
+      }
+    }
+
+    return this.sqnum;
+  };
+
+  /**
+   * Create a maze layout given the initialised maze
+   */
+  createMaze = function () {
+    if (this.moveList.length === 0) {
+      this.moveList.push(this.getStartSquare());
+    }
+
+    while (this.sqnum >= 0) {
+      this.setCurrentSquare(this.moveList[this.sqnum]);
+      this.getCurrentSquare().setOnPath(true);
+      let doorSide = this.chooseDoor(this.getCurrentSquare());
+
+      if (doorSide === null) {
+        this.getCurrentSquare().setOnPath(false);
+
+        this.moveList.pop();
+        this.sqnum--;
+      } else {
+        // mark the out door
+        this.getCurrentSquare().setSide(doorSide, SideType.DoorOut);
+
+        // Move through out door to next square
+        switch (doorSide) {
+          case Side.Top:
+            this.setCurrentSquare(
+              this.getSquare(
+                this.getCurrentSquare().getX(),
+                this.getCurrentSquare().getY() - 1
+              )
+            );
+            break;
+          case Side.Right:
+            this.setCurrentSquare(
+              this.getSquare(
+                this.getCurrentSquare().getX() + 1,
+                this.getCurrentSquare().getY()
+              )
+            );
+            break;
+          case Side.Bottom:
+            this.setCurrentSquare(
+              this.getSquare(
+                this.getCurrentSquare().getX(),
+                this.getCurrentSquare().getY() + 1
+              )
+            );
+            break;
+          case Side.Left:
+            this.setCurrentSquare(
+              this.getSquare(
+                this.getCurrentSquare().getX() - 1,
+                this.getCurrentSquare().getY()
+              )
+            );
+            break;
+        }
+
+        // mark the in door
+        this.getCurrentSquare().setSide(
+          Side.getOpposite(doorSide),
+          SideType.DoorIn
+        );
+        this.moveList.push(this.getCurrentSquare());
+        this.sqnum++;
       }
     }
   };

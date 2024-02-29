@@ -2,7 +2,7 @@
  *
  */
 
-import { Maze, MazeSquare, SideType } from "./mazeModel.js";
+import { Maze } from "./mazeModel.js";
 import { MazeDrawer } from "./mazeDraw.js";
 
 const getMazeCanvas = () => {
@@ -35,6 +35,19 @@ const getSquareSize = () => {
   return squareSize;
 };
 
+const getSpeedFactor = () => {
+  const mazeSpeedInput = document.getElementById("mazeSpeed");
+  const value = parseInt(mazeSpeedInput.value);
+  return value;
+};
+
+const saveMaze = (maze) => {
+  localStorage.setItem("lastMaze", JSON.stringify(maze));
+};
+
+// Variable shared between generate and clear actions
+let drawMazeIntervalId;
+
 function generateMaze() {
   clearMaze();
   console.log(`Generating maze, with square size of ${getSquareSize()}`);
@@ -53,18 +66,41 @@ function generateMaze() {
 
   const maze = new Maze(mazeWidth, mazeHeight);
   const ctx = getMazeContext();
-  const drawer = new MazeDrawer(ctx, wallSize, maze);
+  const drawer = new MazeDrawer(ctx, wallSize);
 
-  maze.registerDrawer(drawer);
-  maze.build();
+  maze.initialiseMaze();
 
-  //drawer.drawMaze();
+  drawMazeIntervalId = setInterval(() => {
+    let percent = getSpeedFactor() / 100;
+    let factor = Math.floor(maze.getWidth() * maze.getHeight() * percent);
+
+    console.debug(`percent = ${percent}, factor = ${factor}`);
+
+    let sqnum = maze.stepCreateMaze();
+
+    while (factor > 0 && sqnum >= 0) {
+      sqnum = maze.stepCreateMaze();
+      factor--;
+    }
+
+    drawer.draw(maze);
+
+    if (sqnum < 0) {
+      clearInterval(drawMazeIntervalId);
+      saveMaze(maze);
+    }
+  }, 0);
 
   return;
 }
 
+const solveMaze = () => {
+  console.log("Solving maze");
+};
+
 const clearMaze = () => {
   console.log("Clearing maze");
+  clearInterval(drawMazeIntervalId);
   getMazeContext().clearRect(
     0,
     0,
@@ -80,7 +116,7 @@ const canvasDivObserver = new ResizeObserver((entries) => {
     `window.innerWidth = ${window.innerWidth}, window.innerHeight = ${window.innerHeight}`
   );
 
-  // this will get called whenever div dimension changes
+  // this will get called whenever canvasdiv dimension changes
   entries.forEach((entry) => {
     console.log("width", Math.max(1, Math.floor(entry.contentRect.width)));
     console.log("height", Math.max(1, Math.floor(entry.contentRect.height)));
@@ -98,6 +134,7 @@ window.addEventListener("DOMContentLoaded", function (event) {
 const initApp = () => {
   //- Mapp javascript functions to buttons.  Using a function pointer:
   document.getElementById("genMazeBut").onclick = generateMaze;
+  document.getElementById("solveMazeBut").onclick = solveMaze;
   document.getElementById("clearMazeBut").onclick = clearMaze;
 
   const canvasDiv = document.querySelector(".canvasDiv");

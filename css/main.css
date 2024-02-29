@@ -39,11 +39,30 @@ p {
   color: whitesmoke;
 }
 
+.slideDiv {
+  font-size: 13px;
+  padding: 5px;
+  color: whitesmoke;
+}
+
+.slideDiv label {
+  vertical-align: middle;
+  padding-bottom: 15px;
+}
+
+#squareSize {
+  vertical-align: middle;
+}
+
 .genMazeButtonDiv {
   padding: 5px;
 }
 
 .clearMazeButtonDiv {
+  padding: 5px;
+}
+
+.solveMazeButtonDiv {
   padding: 5px;
 }
 
