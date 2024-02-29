@@ -46,7 +46,9 @@ const saveMaze = (maze) => {
 };
 
 // Variable shared between generate and clear actions
+let maze = null;
 let drawMazeIntervalId;
+let solveMazeIntervalId;
 
 function generateMaze() {
   clearMaze();
@@ -64,7 +66,7 @@ function generateMaze() {
     `canvas width, height = ${width}, ${height}.  Maze size is ${mazeWidth}, ${mazeHeight}`
   );
 
-  const maze = new Maze(mazeWidth, mazeHeight);
+  maze = new Maze(mazeWidth, mazeHeight);
   const ctx = getMazeContext();
   const drawer = new MazeDrawer(ctx, wallSize);
 
@@ -74,12 +76,10 @@ function generateMaze() {
     let percent = getSpeedFactor() / 100;
     let factor = Math.floor(maze.getWidth() * maze.getHeight() * percent);
 
-    console.debug(`percent = ${percent}, factor = ${factor}`);
-
-    let sqnum = maze.stepCreateMaze();
+    let sqnum = maze.stepCreate();
 
     while (factor > 0 && sqnum >= 0) {
-      sqnum = maze.stepCreateMaze();
+      sqnum = maze.stepCreate();
       factor--;
     }
 
@@ -89,18 +89,53 @@ function generateMaze() {
       clearInterval(drawMazeIntervalId);
       saveMaze(maze);
     }
-  }, 0);
+  }, 20);
 
   return;
 }
 
 const solveMaze = () => {
-  console.log("Solving maze");
+  if (maze !== null) {
+    console.log("Solving maze");
+
+    const wallSize = getSquareSize();
+    const ctx = getMazeContext();
+    const drawer = new MazeDrawer(ctx, wallSize);
+    drawer.setPathColour("#00FF00");
+
+    maze.initialiseSolver();
+    // maze.solve();
+    // drawer.draw(maze);
+    // return;
+
+    solveMazeIntervalId = setInterval(() => {
+      let percent = getSpeedFactor() / 100;
+      let factor = Math.floor(maze.getWidth() * maze.getHeight() * percent);
+
+      let isComplete = maze.stepSolve();
+
+      while (factor > 0 && !isComplete) {
+        isComplete = maze.stepSolve();
+        factor--;
+      }
+
+      drawer.draw(maze);
+
+      if (isComplete) {
+        clearInterval(solveMazeIntervalId);
+      }
+    }, 20);
+
+    return;
+  }
 };
 
 const clearMaze = () => {
   console.log("Clearing maze");
+  maze = null;
   clearInterval(drawMazeIntervalId);
+  clearInterval(solveMazeIntervalId);
+
   getMazeContext().clearRect(
     0,
     0,

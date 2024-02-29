@@ -45,6 +45,16 @@ export class Side {
       ? this.Left
       : this.Right;
   };
+
+  getNext() {
+    return this.name === "top"
+      ? Side.Right
+      : this.name === "right"
+      ? Side.Bottom
+      : this.name === "bottom"
+      ? Side.Left
+      : Side.Top;
+  }
 }
 
 export class SideType {
@@ -119,6 +129,56 @@ export class MazeSquare {
   hasDoor() {
     return hasInDoor() || hasOutDoor();
   }
+
+  getInDoor() {
+    return this.getTop() === SideType.DoorIn
+      ? Side.Top
+      : this.getBottom() === SideType.DoorIn
+      ? Side.Bottom
+      : this.getLeft() === SideType.DoorIn
+      ? Side.Left
+      : Side.Right;
+  }
+
+  getNextOutDoorStartingFrom(start) {
+    return getNextOutDoorStartingFrom(start, []);
+  }
+
+  getNextOutDoorStartingFrom(start, doorsTried) {
+    let x = start.getNext();
+
+    while (x !== start) {
+      if (
+        x === Side.Top &&
+        this.getTop() === SideType.DoorOut &&
+        !doorsTried.includes(Side.Top)
+      ) {
+        return Side.Top;
+      } else if (
+        x === Side.Right &&
+        this.getRight() == SideType.DoorOut &&
+        !doorsTried.includes(Side.Right)
+      ) {
+        return Side.Right;
+      } else if (
+        x === Side.Bottom &&
+        this.getBottom() === SideType.DoorOut &&
+        !doorsTried.includes(Side.Bottom)
+      ) {
+        return Side.Bottom;
+      } else if (
+        x === Side.Left &&
+        this.getLeft() === SideType.DoorOut &&
+        !doorsTried.includes(Side.Left)
+      ) {
+        return Side.Left;
+      }
+
+      x = x.getNext();
+    }
+
+    return null;
+  }
 }
 
 export class Maze {
@@ -133,6 +193,9 @@ export class Maze {
   // Following two items used during generation and solving
   sqnum = 0;
   moveList = [];
+  path = [];
+  sqrDoorsAttempted = new Map();
+  deadEndSqrs = [];
 
   constructor(width, height) {
     this.width = width;
@@ -144,7 +207,20 @@ export class Maze {
     this.setStartAndExit();
     this.sqnum = 0;
     this.moveList = [];
-    //this.createMaze();
+    this.path = [];
+  };
+
+  initialiseSolver = function () {
+    this.resetPath();
+    this.setCurrentSquare(this.getStartSquare());
+    this.sqnum = 0;
+    this.moveList = [];
+    this.moveList.push(this.getStartSquare());
+    this.path = [];
+    this.path.push(this.getStartSquare());
+
+    this.sqrDoorsAttempted = new Map();
+    this.deadEndSqrs = [];
   };
 
   getWidth() {
@@ -208,6 +284,16 @@ export class Maze {
     return this.mazeGrid;
   };
 
+  resetPath = function () {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        this.mazeGrid[x][y].onPath = false;
+      }
+    }
+
+    return this.mazeGrid;
+  };
+
   setStartAndExit = function () {
     let x = -1;
     let y = -1;
@@ -263,7 +349,7 @@ export class Maze {
     this.endSquare.sides.set(endSide, SideType.DoorOut);
   };
 
-  stepCreateMaze = function () {
+  stepCreate = function () {
     if (this.moveList.length === 0) {
       this.moveList.push(this.getStartSquare());
     }
@@ -331,10 +417,10 @@ export class Maze {
     return this.sqnum;
   };
 
-  /**
+  /*
    * Create a maze layout given the initialised maze
    */
-  createMaze = function () {
+  create = function () {
     if (this.moveList.length === 0) {
       this.moveList.push(this.getStartSquare());
     }
@@ -450,5 +536,156 @@ export class Maze {
     if (candidates.length === 0) return null;
 
     return candidates[getRandom(candidates.length)];
+  };
+
+  /*
+   * Solve a maze in steps
+   */
+  stepSolve = function () {
+    if (this.getCurrentSquare() !== this.getEndSquare()) {
+      this.setCurrentSquare(this.moveList[this.sqnum]);
+      this.getCurrentSquare().setOnPath(true);
+
+      let doorsTried = this.sqrDoorsAttempted.get(this.getCurrentSquare());
+
+      if (doorsTried === undefined) {
+        doorsTried = [];
+        this.sqrDoorsAttempted.set(this.getCurrentSquare(), doorsTried);
+      }
+
+      let outDoorSide = this.getCurrentSquare().getNextOutDoorStartingFrom(
+        this.getCurrentSquare().getInDoor(),
+        doorsTried
+      );
+
+      if (
+        outDoorSide === null ||
+        this.deadEndSqrs.includes(this.getCurrentSquare())
+      ) {
+        this.deadEndSqrs.push(this.getCurrentSquare());
+        this.getCurrentSquare().setOnPath(false);
+        this.path.pop();
+        this.moveList.pop();
+        this.sqnum--;
+      } else {
+        doorsTried.push(outDoorSide);
+
+        let nextSquare = null;
+
+        // Move through out door to next square
+        switch (outDoorSide) {
+          case Side.Top:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX(),
+              this.getCurrentSquare().getY() - 1
+            );
+            break;
+          case Side.Right:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX() + 1,
+              this.getCurrentSquare().getY()
+            );
+            break;
+          case Side.Bottom:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX(),
+              this.getCurrentSquare().getY() + 1
+            );
+            break;
+          case Side.Left:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX() - 1,
+              this.getCurrentSquare().getY()
+            );
+            break;
+        }
+
+        this.setCurrentSquare(nextSquare);
+
+        // mark the in door
+        this.path.push(this.getCurrentSquare());
+        this.moveList.push(this.getCurrentSquare());
+        this.sqnum++;
+      }
+    }
+
+    if (this.getCurrentSquare() === this.getEndSquare()) {
+      this.getCurrentSquare().setOnPath(true);
+    }
+
+    return this.getCurrentSquare() === this.getEndSquare();
+  };
+
+  /*
+   * Solve a maze
+   */
+  solve = function () {
+    while (this.getCurrentSquare() !== this.getEndSquare()) {
+      this.setCurrentSquare(this.moveList[this.sqnum]);
+      this.getCurrentSquare().setOnPath(true);
+
+      let doorsTried = this.sqrDoorsAttempted.get(this.getCurrentSquare());
+
+      if (doorsTried === undefined) {
+        doorsTried = [];
+        this.sqrDoorsAttempted.set(this.getCurrentSquare(), doorsTried);
+      }
+
+      let outDoorSide = this.getCurrentSquare().getNextOutDoorStartingFrom(
+        this.getCurrentSquare().getInDoor(),
+        doorsTried
+      );
+
+      if (
+        outDoorSide === null ||
+        this.deadEndSqrs.includes(this.getCurrentSquare())
+      ) {
+        this.deadEndSqrs.push(this.getCurrentSquare());
+        this.getCurrentSquare().setOnPath(false);
+        this.path.pop();
+        this.moveList.pop();
+        this.sqnum--;
+      } else {
+        doorsTried.push(outDoorSide);
+
+        let nextSquare = null;
+
+        // Move through out door to next square
+        switch (outDoorSide) {
+          case Side.Top:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX(),
+              this.getCurrentSquare().getY() - 1
+            );
+            break;
+          case Side.Right:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX() + 1,
+              this.getCurrentSquare().getY()
+            );
+            break;
+          case Side.Bottom:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX(),
+              this.getCurrentSquare().getY() + 1
+            );
+            break;
+          case Side.Left:
+            nextSquare = this.getSquare(
+              this.getCurrentSquare().getX() - 1,
+              this.getCurrentSquare().getY()
+            );
+            break;
+        }
+
+        this.setCurrentSquare(nextSquare);
+
+        // mark the in door
+        this.path.push(this.getCurrentSquare());
+        this.moveList.push(this.getCurrentSquare());
+        this.sqnum++;
+      }
+    }
+    this.getCurrentSquare().setOnPath(true);
   };
 }

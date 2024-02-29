@@ -14,6 +14,14 @@ export class MazeDrawer {
     this.wallSize = wallSize;
   }
 
+  setWallColour(colour) {
+    this.wallColour = colour;
+  }
+
+  setPathColour(colour) {
+    this.pathColour = colour;
+  }
+
   drawSquare = function (sqr) {
     let yOffset = this.offset + sqr.y * this.wallSize;
     let xOffset = this.offset + sqr.x * this.wallSize;
