@@ -11,7 +11,7 @@ const findInMap = (map, val) => {
   return false;
 };
 
-export class Side {
+class Side {
   // Create new instances of the same class as static attributes
   static Top = new Side("top");
   static Bottom = new Side("bottom");
@@ -67,7 +67,7 @@ export class SideType {
   }
 }
 
-export class MazeSquare {
+class MazeSquare {
   x = 0;
   y = 0;
   sides = new Map();
@@ -181,7 +181,7 @@ export class MazeSquare {
   }
 }
 
-export class Maze {
+export default class Maze {
   width = 0;
   height = 0;
 

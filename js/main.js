@@ -2,8 +2,8 @@
  *
  */
 
-import { Maze } from "./mazeModel.js";
-import { MazeDrawer } from "./mazeDraw.js";
+import Maze from "./mazeModel.js";
+import MazeDrawer from "./mazeDraw.js";
 
 const getMazeCanvas = () => {
   const canvas = document.getElementById("mazeCanvas");

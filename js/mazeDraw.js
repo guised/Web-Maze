@@ -1,6 +1,6 @@
-import { SideType, MazeSquare } from "./mazeModel.js";
+import { SideType } from "./mazeModel.js";
 
-export class MazeDrawer {
+export default class MazeDrawer {
   ctx;
   wallSize = 10;
 
