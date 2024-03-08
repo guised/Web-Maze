@@ -70,6 +70,9 @@ function generateMaze() {
   const ctx = getMazeContext();
   const drawer = new MazeDrawer(ctx, wallSize);
 
+  const wallColour = document.getElementById("wallColour").value;
+  drawer.setWallColour(wallColour);
+
   maze.initialiseMaze();
 
   drawMazeIntervalId = setInterval(() => {
@@ -101,7 +104,12 @@ const solveMaze = () => {
     const wallSize = getSquareSize();
     const ctx = getMazeContext();
     const drawer = new MazeDrawer(ctx, wallSize);
-    drawer.setPathColour("#00FF00");
+
+    const wallColour = document.getElementById("wallColour").value;
+    drawer.setWallColour(wallColour);
+
+    const pathColour = document.getElementById("pathColour").value;
+    drawer.setPathColour(pathColour);
 
     maze.initialiseSolver();
     // maze.solve();
@@ -144,6 +152,36 @@ const clearMaze = () => {
   );
 };
 
+const setBackColour = () => {
+  const backColour = document.getElementById("backColour").value;
+
+  console.log(`setBackColour called with value = ${backColour}`);
+
+  const canvas = document.getElementById("mazeCanvas");
+  canvas.style.backgroundColor = backColour;
+
+  const ctx = canvas.getContext("2d");
+  // Add behind elements.
+  ctx.globalCompositeOperation = "destination-over";
+  // Now draw!
+  ctx.fillStyle = backColour;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.globalCompositeOperation = "source-over";
+};
+
+const setWallColour = () => {
+  const wallColour = document.getElementById("wallColour").value;
+
+  console.log(`setWallColour called with value = ${wallColour}`);
+};
+
+const setPathColour = () => {
+  const pathColour = document.getElementById("pathColour").value;
+
+  console.log(`setPathColour called with value = ${pathColour}`);
+};
+
 const canvasDivObserver = new ResizeObserver((entries) => {
   const canvas = document.getElementById("mazeCanvas");
 
@@ -171,6 +209,9 @@ const initApp = () => {
   document.getElementById("genMazeBut").onclick = generateMaze;
   document.getElementById("solveMazeBut").onclick = solveMaze;
   document.getElementById("clearMazeBut").onclick = clearMaze;
+  document.getElementById("backColour").onchange = setBackColour;
+  document.getElementById("wallColour").onchange = setWallColour;
+  document.getElementById("pathColour").onchange = setPathColour;
 
   const canvasDiv = document.querySelector(".canvasDiv");
 

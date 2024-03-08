@@ -10,8 +10,10 @@
   </head>
 
   <body>
-    <main>
+    <header>
       <h1>Web Maze</h1>
+    </header>
+    <main>
       <div class="controlsDiv">
         <div class="squareSizeDiv">
           <label for="squareSize"
@@ -38,6 +40,37 @@
             value="20"
             step="0.5"
             class="slider"
+          />
+        </div>
+
+        <div class="backColourDiv">
+          <label for="backColour">Canvas colour:</label>
+          <input
+            type="color"
+            id="backColour"
+            name="backColour"
+            value="#000000"
+            class="mazeColourPicker"
+          />
+        </div>
+        <div class="wallColourDiv">
+          <label for="wallColour">Wall colour:</label>
+          <input
+            type="color"
+            id="wallColour"
+            name="wallColour"
+            value="#0000FF"
+            class="mazeColourPicker"
+          />
+        </div>
+        <div class="pathColourDiv">
+          <label for="pathColour">Path colour:</label>
+          <input
+            type="color"
+            id="pathColour"
+            name="pathColour"
+            value="#FF0000"
+            class="mazeColourPicker"
           />
         </div>
         <div class="genMazeButtonDiv">
