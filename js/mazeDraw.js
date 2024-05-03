@@ -6,11 +6,20 @@ export default class MazeDrawer {
 
   offset = 5;
   wallBrushWidth = 2;
+  wallToPathGap = 2;
   wallColour = "#000000";
   pathColour = "#FF0000";
 
   constructor(ctx, wallSize) {
     this.ctx = ctx;
+    this.wallSize = wallSize;
+  }
+
+  setCtx(ctx) {
+    this.ctx = ctx;
+  }
+
+  setWallSize(wallSize) {
     this.wallSize = wallSize;
   }
 
@@ -79,6 +88,9 @@ export default class MazeDrawer {
       }
     }
 
+    this.ctx.lineWidth = this.wallBrushWidth;
+    this.ctx.strokeStyle = this.wallColour;
+
     // Top
     if (sqr.getTop() === SideType.Wall) {
       this.ctx.beginPath();
@@ -109,95 +121,62 @@ export default class MazeDrawer {
     }
 
     if (sqr.isOnPath()) {
-      this.ctx.strokeStyle = this.pathColour;
+      this.ctx.fillStyle = this.pathColour;
 
-      let pathBrushWidth = Math.max(1, this.wallSize - 2 * this.wallBrushWidth);
-
-      this.ctx.lineWidth = pathBrushWidth;
+      let halfBrushWidth = Math.max(1, Math.floor(this.wallBrushWidth / 2));
 
       // Top
-      if (sqr.getTop() === SideType.DoorIn) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(xOffset + this.wallSize / 2, yOffset);
-        this.ctx.lineTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.stroke();
-      }
-      // Right
-      if (sqr.getRight() === SideType.DoorIn) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(xOffset + this.wallSize, yOffset + this.wallSize / 2);
-        this.ctx.lineTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.stroke();
-      }
-      // Bottom
-      if (sqr.getBottom() === SideType.DoorIn) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(xOffset + this.wallSize / 2, yOffset + this.wallSize);
-        this.ctx.lineTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.stroke();
-      }
-      // Left
-      if (sqr.getLeft() === SideType.DoorIn) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(xOffset, yOffset + this.wallSize / 2);
-        this.ctx.lineTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.stroke();
-      }
-      // Top
-      if (sqr.getTop() === SideType.DoorOut) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.lineTo(xOffset + this.wallSize / 2, yOffset);
-        this.ctx.stroke();
-      }
-      // Right
-      if (sqr.getRight() === SideType.DoorOut) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.lineTo(xOffset + this.wallSize, yOffset + this.wallSize / 2);
-        this.ctx.stroke();
-      }
-      // Bottom
-      if (sqr.getBottom() === SideType.DoorOut) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.lineTo(xOffset + this.wallSize / 2, yOffset + this.wallSize);
-        this.ctx.stroke();
-      }
-      // Left
-      if (sqr.getLeft() === SideType.DoorOut) {
-        this.ctx.beginPath();
-        this.ctx.moveTo(
-          xOffset + this.wallSize / 2,
-          yOffset + this.wallSize / 2
-        );
-        this.ctx.lineTo(xOffset, yOffset + this.wallSize / 2);
-        this.ctx.stroke();
-      }
+      if (
+        sqr.getTop() === SideType.DoorIn ||
+        sqr.getTop() === SideType.DoorOut
+      ) {
+        this.ctx.fillRect(
+          xOffset + this.wallToPathGap + halfBrushWidth,
+          yOffset,
 
-      this.ctx.strokeStyle = this.wallColour;
-      this.ctx.lineWidth = this.wallBrushWidth;
+          Math.max(1, this.wallSize - 2 * this.wallToPathGap),
+          Math.max(1, this.wallSize - this.wallToPathGap)
+        );
+      }
+      // Right
+      if (
+        sqr.getRight() === SideType.DoorIn ||
+        sqr.getRight() === SideType.DoorOut
+      ) {
+        this.ctx.fillRect(
+          xOffset + this.wallToPathGap + halfBrushWidth,
+          yOffset + this.wallToPathGap,
+
+          Math.max(1, this.wallSize - this.wallToPathGap),
+          Math.max(1, this.wallSize - 2 * this.wallToPathGap)
+        );
+      }
+      // Bottom
+      if (
+        sqr.getBottom() === SideType.DoorIn ||
+        sqr.getBottom() === SideType.DoorOut
+      ) {
+        this.ctx.fillRect(
+          xOffset + this.wallToPathGap + halfBrushWidth,
+          yOffset + this.wallToPathGap + halfBrushWidth,
+
+          Math.max(1, this.wallSize - 2 * this.wallToPathGap),
+          Math.max(1, this.wallSize - this.wallToPathGap)
+        );
+      }
+      // Left
+      if (
+        sqr.getLeft() === SideType.DoorIn ||
+        sqr.getLeft() === SideType.DoorOut
+      ) {
+        this.ctx.fillRect(
+          xOffset,
+          yOffset + this.wallToPathGap,
+
+          Math.max(1, this.wallSize - this.wallToPathGap),
+          Math.max(1, this.wallSize - 2 * this.wallToPathGap)
+        );
+      }
     }
   };
 

@@ -47,17 +47,35 @@ const saveMaze = (maze) => {
 
 // Variable shared between generate and clear actions
 let maze = null;
-let drawMazeIntervalId;
+let drawer = null;
+let generateMazeIntervalId;
 let solveMazeIntervalId;
+let interval = 20;
+
+function getMazeDrawer() {
+  if (drawer === null) {
+    const wallSize = getSquareSize();
+    const ctx = getMazeContext();
+    drawer = new MazeDrawer(ctx, wallSize);
+
+    const wallColour = document.getElementById("wallColour").value;
+    drawer.setWallColour(wallColour);
+
+    const pathColour = document.getElementById("pathColour").value;
+    drawer.setPathColour(pathColour);
+  }
+
+  return drawer;
+}
 
 function generateMaze() {
   clearMaze();
   console.log(`Generating maze, with square size of ${getSquareSize()}`);
 
-  const wallSize = getSquareSize();
-
   let width = getMazeCanvas().width;
   let height = getMazeCanvas().height;
+
+  const wallSize = getSquareSize();
 
   let mazeWidth = Math.floor(width / wallSize) - 2;
   let mazeHeight = Math.floor(height / wallSize) - 2;
@@ -66,33 +84,45 @@ function generateMaze() {
     `canvas width, height = ${width}, ${height}.  Maze size is ${mazeWidth}, ${mazeHeight}`
   );
 
-  maze = new Maze(mazeWidth, mazeHeight);
-  const ctx = getMazeContext();
-  const drawer = new MazeDrawer(ctx, wallSize);
-
+  getMazeDrawer().setWallSize(wallSize);
   const wallColour = document.getElementById("wallColour").value;
-  drawer.setWallColour(wallColour);
+  getMazeDrawer().setWallColour(wallColour);
+
+  const pathColour = document.getElementById("pathColour").value;
+  getMazeDrawer().setPathColour(pathColour);
+
+  maze = new Maze(mazeWidth, mazeHeight);
 
   maze.initialiseMaze();
 
-  drawMazeIntervalId = setInterval(() => {
-    let percent = getSpeedFactor() / 100;
-    let factor = Math.floor(maze.getWidth() * maze.getHeight() * percent);
+  generateMazeIntervalId = setInterval(() => {
+    let speed = getSpeedFactor();
+    console.debug(`speed = ${speed}`);
+
+    let factor = speed;
+    // let factor = Math.floor(
+    //   (maze.getWidth() * maze.getHeight() * percent) / 100
+    // );
 
     let sqnum = maze.stepCreate();
 
     while (factor > 0 && sqnum >= 0) {
       sqnum = maze.stepCreate();
+      getMazeDrawer().drawSquare(maze.getCurrentSquare());
+      getMazeDrawer().drawSquare(maze.getPreviousSquare());
       factor--;
     }
 
-    drawer.draw(maze);
+    getMazeDrawer().drawSquare(maze.getCurrentSquare());
+    getMazeDrawer().drawSquare(maze.getPreviousSquare());
 
     if (sqnum < 0) {
-      clearInterval(drawMazeIntervalId);
+      clearInterval(generateMazeIntervalId);
+      getMazeDrawer().draw(maze);
       saveMaze(maze);
+      console.log("Maze generated.");
     }
-  }, 20);
+  }, interval);
 
   return;
 }
@@ -101,38 +131,45 @@ const solveMaze = () => {
   if (maze !== null) {
     console.log("Solving maze");
 
-    const wallSize = getSquareSize();
-    const ctx = getMazeContext();
-    const drawer = new MazeDrawer(ctx, wallSize);
-
     const wallColour = document.getElementById("wallColour").value;
-    drawer.setWallColour(wallColour);
+    getMazeDrawer().setWallColour(wallColour);
 
     const pathColour = document.getElementById("pathColour").value;
-    drawer.setPathColour(pathColour);
+    getMazeDrawer().setPathColour(pathColour);
 
     maze.initialiseSolver();
-    // maze.solve();
-    // drawer.draw(maze);
-    // return;
+
+    getMazeDrawer().draw(maze);
 
     solveMazeIntervalId = setInterval(() => {
-      let percent = getSpeedFactor() / 100;
-      let factor = Math.floor(maze.getWidth() * maze.getHeight() * percent);
+      let speed = getSpeedFactor();
+      console.debug(`speed = ${speed}`);
 
-      let isComplete = maze.stepSolve();
+      let factor = speed;
+      // let factor = Math.floor(
+      //   (maze.getWidth() * maze.getHeight() * percent) / 100
+      // );
 
-      while (factor > 0 && !isComplete) {
-        isComplete = maze.stepSolve();
-        factor--;
+      if (maze !== null) {
+        let isComplete = maze.stepSolve();
+
+        while (factor > 0 && !isComplete) {
+          isComplete = maze.stepSolve();
+          getMazeDrawer().drawSquare(maze.getCurrentSquare());
+          getMazeDrawer().drawSquare(maze.getPreviousSquare());
+          factor--;
+        }
+
+        getMazeDrawer().drawSquare(maze.getCurrentSquare());
+        getMazeDrawer().drawSquare(maze.getPreviousSquare());
+
+        if (isComplete) {
+          clearInterval(solveMazeIntervalId);
+          getMazeDrawer().draw(maze);
+          console.log("Maze solved.");
+        }
       }
-
-      drawer.draw(maze);
-
-      if (isComplete) {
-        clearInterval(solveMazeIntervalId);
-      }
-    }, 20);
+    }, interval);
 
     return;
   }
@@ -141,7 +178,7 @@ const solveMaze = () => {
 const clearMaze = () => {
   console.log("Clearing maze");
   maze = null;
-  clearInterval(drawMazeIntervalId);
+  clearInterval(generateMazeIntervalId);
   clearInterval(solveMazeIntervalId);
 
   getMazeContext().clearRect(
@@ -157,10 +194,10 @@ const setBackColour = () => {
 
   console.log(`setBackColour called with value = ${backColour}`);
 
-  const canvas = document.getElementById("mazeCanvas");
+  const canvas = getMazeCanvas();
   canvas.style.backgroundColor = backColour;
 
-  const ctx = canvas.getContext("2d");
+  const ctx = getMazeContext();
   // Add behind elements.
   ctx.globalCompositeOperation = "destination-over";
   // Now draw!

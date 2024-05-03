@@ -189,6 +189,7 @@ export default class Maze {
   startSquare = new MazeSquare();
   endSquare = new MazeSquare();
   currentSquare = new MazeSquare();
+  previousSquare;
 
   // Following two items used during generation and solving
   sqnum = 0;
@@ -249,6 +250,14 @@ export default class Maze {
 
   setCurrentSquare(sqr) {
     this.currentSquare = sqr;
+  }
+
+  getPreviousSquare() {
+    return this.previousSquare;
+  }
+
+  setPreviousSquare(sqr) {
+    this.previousSquare = sqr;
   }
 
   getSqnum() {
@@ -354,6 +363,8 @@ export default class Maze {
       this.moveList.push(this.getStartSquare());
     }
 
+    this.setPreviousSquare(this.getCurrentSquare());
+
     if (this.sqnum >= 0) {
       this.setCurrentSquare(this.moveList[this.sqnum]);
       this.getCurrentSquare().setOnPath(true);
@@ -424,6 +435,8 @@ export default class Maze {
     if (this.moveList.length === 0) {
       this.moveList.push(this.getStartSquare());
     }
+
+    this.setPreviousSquare(this.getCurrentSquare());
 
     while (this.sqnum >= 0) {
       this.setCurrentSquare(this.moveList[this.sqnum]);
@@ -542,6 +555,13 @@ export default class Maze {
    * Solve a maze in steps
    */
   stepSolve = function () {
+    if (this.moveList.length === 0) {
+      this.moveList.push(this.getStartSquare());
+      this.sqnum = 0;
+    }
+
+    this.setPreviousSquare(this.getCurrentSquare());
+
     if (this.getCurrentSquare() !== this.getEndSquare()) {
       this.setCurrentSquare(this.moveList[this.sqnum]);
       this.getCurrentSquare().setOnPath(true);
@@ -621,6 +641,8 @@ export default class Maze {
    */
   solve = function () {
     while (this.getCurrentSquare() !== this.getEndSquare()) {
+      this.setPreviousSquare(this.getCurrentSquare());
+
       this.setCurrentSquare(this.moveList[this.sqnum]);
       this.getCurrentSquare().setOnPath(true);
 
